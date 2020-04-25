@@ -63,6 +63,8 @@ public class UserProfileDataAccessService implements UserDAO {
 
     @Override
     public int updateUserProfileById(UUID id, UserProfile userProfile) {
-        return 0;
+        final String sql = "UPDATE userprofile SET username = ?, imagelink = ? WHERE id = ?";
+        jdbcTemplate.update(sql, userProfile.getUsername(), userProfile.getUserImageLink(), id);
+        return 1;
     }
 }

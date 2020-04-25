@@ -14,13 +14,13 @@ public class UserProfile {
 
     @Getter
     @Setter
-    private UUID userProfileId;
+    private final UUID userProfileId;
 
     @Getter
     @Setter
     private String username;
 
-    @Getter
+    @Getter()
     @Setter
     private String userImageLink; //S3 key
 
