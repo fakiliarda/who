@@ -27,10 +27,10 @@ public class UserProfileDataAccessService implements UserDAO {
 
 
     @Override
-    public int insertUserProfile(UUID id, UserProfile userProfile) {
+    public UserProfile insertUserProfile(UserProfile userProfile) {
         final String sql = "INSERT INTO userprofile (id, username, imagelink) VALUES (?, ?, ?)";
-        jdbcTemplate.update(sql, id, userProfile.getUsername(), userProfile.getUserImageLink());
-            return 1;
+        jdbcTemplate.update(sql, userProfile.getUserProfileId(), userProfile.getUsername(), userProfile.getUserImageLink());
+            return userProfile;
         }
 
     @Override

@@ -12,11 +12,11 @@ import java.util.UUID;
  */
 public interface UserDAO {
 
-    int insertUserProfile(UUID id, UserProfile userProfile);
+    UserProfile insertUserProfile(UserProfile userProfile);
 
-    default int insertUserProfile(UserProfile userProfile) {
+    default UserProfile insertUserProfile(String username) {
         UUID id = UUID.randomUUID();
-        return insertUserProfile(id, userProfile);
+        return insertUserProfile(new UserProfile(id, username));
     }
 
     List<UserProfile> selectAllUserProfiles();

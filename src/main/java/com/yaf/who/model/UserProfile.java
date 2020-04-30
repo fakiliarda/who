@@ -30,6 +30,11 @@ public class UserProfile {
         this.userImageLink = userImageLink;
     }
 
+    public UserProfile(UUID userProfileId, String username) {
+        this.userProfileId = userProfileId;
+        this.username = username;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

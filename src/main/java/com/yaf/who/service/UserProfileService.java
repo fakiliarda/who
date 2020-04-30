@@ -2,12 +2,14 @@ package com.yaf.who.service;
 
 import com.yaf.who.bucket.BucketName;
 import com.yaf.who.dao.UserDAO;
+import com.yaf.who.model.UploadedFile;
 import com.yaf.who.model.UserProfile;
 import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -21,6 +23,8 @@ public class UserProfileService {
 
     private final UserDAO userDao;
     private final FileStoreService fileStoreService;
+    private UploadedFile uploadedFile;
+    private boolean profileImageDisplayed = false;
 
     @Autowired
     public UserProfileService(UserDAO userDao, FileStoreService fileStoreService) {
@@ -28,8 +32,11 @@ public class UserProfileService {
         this.fileStoreService = fileStoreService;
     }
 
-    public void addUserProfile(UserProfile UserProfile) {
-        userDao.insertUserProfile(UserProfile);
+    public void addUserProfile(String username) {
+        if (uploadedFile != null) {
+            UserProfile userProfile = userDao.insertUserProfile(username);
+            uploadUserProfileImage(userProfile.getUserProfileId(), this.uploadedFile);
+        }
     }
 
     public List<UserProfile> getPeople() {
@@ -48,22 +55,18 @@ public class UserProfileService {
         return userDao.updateUserProfileById(id, UserProfile);
     }
 
-    public void uploadUserProfileImage(UUID userProfileId, MultipartFile file) {
+    public void uploadUserProfileImage(UUID userProfileId, UploadedFile file) {
 
-        isFileEmpty(file);
-        isImage(file);
+        isFileEmpty(file.getData());
+        isImage(file.getContentType());
         UserProfile user = getUserProfileOrThrow(userProfileId);
         Map<String, String> metaData = extractMetaData(file);
 
         String path = String.format("%s/%s", BucketName.PROFILE_IMAGE.getBucketName(), user.getUserProfileId());
         String filename = String.format("%s-%s", file.getOriginalFilename(), UUID.randomUUID());
-        try {
-            fileStoreService.save(path, filename, Optional.of(metaData), file.getInputStream());
-            user.setUserImageLink(filename);
-            userDao.updateUserProfileById(userProfileId, user);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
+        fileStoreService.save(path, filename, Optional.of(metaData), new ByteArrayInputStream(file.getData()));
+        user.setUserImageLink(filename);
+        userDao.updateUserProfileById(userProfileId, user);
 
     }
 
@@ -84,7 +87,25 @@ public class UserProfileService {
 
     }
 
-    private Map<String, String> extractMetaData(MultipartFile file) {
+    public byte[] downloadTempImage() {
+        if (this.uploadedFile != null && !profileImageDisplayed) {
+            profileImageDisplayed = true;
+            return uploadedFile.getData();
+        }
+        profileImageDisplayed = false;
+        return fileStoreService.download(BucketName.PROFILE_IMAGE.getBucketName(), "profile.png");
+    }
+
+    public void uploadTempProfileImage(MultipartFile file) {
+        try {
+            this.uploadedFile = new UploadedFile(file.getContentType(), file.getOriginalFilename(), file.getBytes());
+            profileImageDisplayed = false;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Map<String, String> extractMetaData(UploadedFile file) {
         Map<String, String> metaData = new HashMap<>();
         metaData.put("Content-Type", file.getContentType());
         metaData.put("Content-Length", String.valueOf(file.getSize()));
@@ -100,19 +121,18 @@ public class UserProfileService {
                 .orElseThrow(() -> new IllegalStateException(String.format("User profile %s not found.", userProfileId)));
     }
 
-    private void isImage(MultipartFile file) {
+    private void isImage(String contentType) {
         if (Arrays.asList(
                 ContentType.IMAGE_JPEG,
                 ContentType.IMAGE_PNG).
-                contains(file.getContentType())) {
+                contains(contentType)) {
             throw new IllegalStateException("File must be an image.");
         }
     }
 
-    private void isFileEmpty(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new IllegalStateException("Cannot upload empty file [ " + file.getSize() + "]");
+    private void isFileEmpty(byte[] fileData) {
+        if (fileData.length <= 0) {
+            throw new IllegalStateException("Cannot upload empty file.");
         }
     }
-
 }
