@@ -1,36 +1,13 @@
-import React, { Component, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone'
-import axios from "axios";
 
 function Dropzone(props) {
 
   const onDrop = useCallback(acceptedFiles => {
     const file = acceptedFiles[0];
-    console.log(file);
-
-
-    
-    props.onUrlChange(URL.createObjectURL(acceptedFiles[0]))
-
-    const formData = new FormData();
-    formData.append("file", file);
-    console.log(formData);
-
-    // formData.append("file", file);
-    // axios.post(`http://localhost:8080/add/temp-image-upload`,
-    //   formData,
-    //   {
-    //     headers: {
-    //       "Content-Type": "multipart/form-data"
-    //     }
-    //   }
-    // ).then(() => {
-    //   console.log("File uploaded successfully.")
-    // }).catch(err => {
-    //   console.log(err);
-    // });
-
-    // window.location.reload();
+    console.log(acceptedFiles[0]);
+    const url = URL.createObjectURL(acceptedFiles[0]);
+    props.onUrlChange({url, file});
 
   }, [])
 

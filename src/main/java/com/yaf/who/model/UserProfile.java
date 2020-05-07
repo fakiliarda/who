@@ -18,21 +18,16 @@ public class UserProfile {
 
     @Getter
     @Setter
-    private String username;
+    private final String username;
 
-    @Getter()
+    @Getter
     @Setter
-    private String userImageLink; //S3 key
+    private final String userImageLink; //S3 key
 
     public UserProfile(UUID userProfileId, String username, String userImageLink) {
         this.userProfileId = userProfileId;
         this.username = username;
         this.userImageLink = userImageLink;
-    }
-
-    public UserProfile(UUID userProfileId, String username) {
-        this.userProfileId = userProfileId;
-        this.username = username;
     }
 
     @Override

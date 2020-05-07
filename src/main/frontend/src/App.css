@@ -3,14 +3,62 @@
 }
 
 .AddUserPage {
-    text-align: center;
+    transform: translate(0%, 20%)
+    /* text-align: center; */
+    /* display: flex; */
+    /* align-items: center; */
+    /* margin-top: '900px', */
+}
+
+.ListAllMembersPage {
+    height: 50vh;
+}
+
+.Display {
+    justify-content: left;
+    align-items: stretch;
+    height: 50vh;
+}
+
+.Action {
+    align-items: stretch;
+    justify-content: left;
+    display: flex;
+    min-height: 25vh;
+    min-width: 70vh;
+    margin-bottom: 25px;
+    margin-top: 20px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
+    .Img-action {
+        position: 'absolute';
+        left: '50%';
+        top: '50%';
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 50%;
     }
 }
+
+.Member {
+    background-color: whitesmoke;
+    border-radius: 15%;
+    display: flex;
+    min-height: 25vh;
+    min-width: 70vh;
+    margin-bottom: 25px;
+    margin-top: 20px;
+}
+
+
+.centered {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
 .App-header {
     background-color: #282c34;

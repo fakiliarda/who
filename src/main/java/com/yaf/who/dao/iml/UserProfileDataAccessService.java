@@ -1,13 +1,13 @@
 package com.yaf.who.dao.iml;
 
 import com.yaf.who.dao.UserDAO;
+import com.yaf.who.model.Action;
 import com.yaf.who.model.UserProfile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -45,7 +45,7 @@ public class UserProfileDataAccessService implements UserDAO {
     }
 
     @Override
-    public Optional<UserProfile> selectUserProfileById(UUID id) {
+    public UserProfile selectUserProfileById(UUID id) {
         final String sql = "SELECT * FROM userprofile WHERE id = ?";
         UserProfile userProfile = jdbcTemplate.queryForObject(sql, new Object[]{id}, (resultSet, i) -> {
             UUID userId = UUID.fromString(resultSet.getString("id"));
@@ -53,12 +53,14 @@ public class UserProfileDataAccessService implements UserDAO {
             return new UserProfile(userId, username, "");
         });
 
-        return Optional.ofNullable(userProfile);
+        return userProfile;
     }
 
     @Override
     public int deleteUserProfileWithById(UUID id) {
-        return 0;
+        final String sql = "DELETE from userprofile WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+        return 1;
     }
 
     @Override
@@ -66,5 +68,19 @@ public class UserProfileDataAccessService implements UserDAO {
         final String sql = "UPDATE userprofile SET username = ?, imagelink = ? WHERE id = ?";
         jdbcTemplate.update(sql, userProfile.getUsername(), userProfile.getUserImageLink(), id);
         return 1;
+    }
+
+    @Override
+    public List<Action> selectAllActions() {
+        final String sql = "SELECT * FROM actions";
+        return jdbcTemplate.query(sql, (resultSet, i) -> {
+            int dbid = resultSet.getInt("dbid");
+            UUID id = UUID.fromString(resultSet.getString("userProfileId"));
+            String image = resultSet.getString("imagelink");
+            String message = resultSet.getString("message");
+
+            System.out.println("Message : " + message);
+            return new Action(dbid, selectUserProfileById(id), image, message);
+        });
     }
 }

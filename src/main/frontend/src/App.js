@@ -4,6 +4,8 @@ import './App.css';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import MainPage from './MainPage'
 import AddUserPage from './AddUserPage'
+import ListAllMembersPage from './ListAllMembersPage';
+import Display from './Display';
 
 function App() {
 
@@ -28,14 +30,14 @@ function App() {
 
         <Route path="/list" render={
           () => {
-            return <h1>Hello list</h1>
+            return <ListAllMembersPage />
           }
         } />
 
 
         <Route path="/display" render={
           () => {
-            return <h1>Hello display</h1>
+            return <Display />
           }
         } />
 

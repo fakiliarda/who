@@ -2,14 +2,13 @@ package com.yaf.who.service;
 
 import com.yaf.who.bucket.BucketName;
 import com.yaf.who.dao.UserDAO;
-import com.yaf.who.model.UploadedFile;
+import com.yaf.who.model.Action;
 import com.yaf.who.model.UserProfile;
 import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -23,8 +22,6 @@ public class UserProfileService {
 
     private final UserDAO userDao;
     private final FileStoreService fileStoreService;
-    private UploadedFile uploadedFile;
-    private boolean profileImageDisplayed = false;
 
     @Autowired
     public UserProfileService(UserDAO userDao, FileStoreService fileStoreService) {
@@ -32,18 +29,36 @@ public class UserProfileService {
         this.fileStoreService = fileStoreService;
     }
 
-    public void addUserProfile(String username) {
-        if (uploadedFile != null) {
-            UserProfile userProfile = userDao.insertUserProfile(username);
-            uploadUserProfileImage(userProfile.getUserProfileId(), this.uploadedFile);
+    public void addUserProfile(String username, MultipartFile file) {
+
+
+        isFileEmpty(file);
+        isImage(file);
+        Map<String, String> metadata = extractMetadata(file);
+
+        UUID userId = UUID.randomUUID();
+        String path = String.format("%s/%s", BucketName.PROFILE_IMAGE.getBucketName(), userId);
+        String filename = String.format("%s-%s", file.getOriginalFilename(), UUID.randomUUID());
+        UserProfile userProfile = new UserProfile(userId, username, filename);
+
+        try {
+            userDao.insertUserProfile(userProfile);
+            fileStoreService.save(path, filename, Optional.of(metadata), file.getInputStream());
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
+
     }
 
     public List<UserProfile> getPeople() {
         return userDao.selectAllUserProfiles();
     }
 
-    public Optional<UserProfile> getUserProfileById(UUID id) {
+    public List<Action> getActions() {
+        return userDao.selectAllActions();
+    }
+
+    public UserProfile getUserProfileById(UUID id) {
         return userDao.selectUserProfileById(id);
     }
 
@@ -55,20 +70,24 @@ public class UserProfileService {
         return userDao.updateUserProfileById(id, UserProfile);
     }
 
-    public void uploadUserProfileImage(UUID userProfileId, UploadedFile file) {
-
-        isFileEmpty(file.getData());
-        isImage(file.getContentType());
-        UserProfile user = getUserProfileOrThrow(userProfileId);
-        Map<String, String> metaData = extractMetaData(file);
-
-        String path = String.format("%s/%s", BucketName.PROFILE_IMAGE.getBucketName(), user.getUserProfileId());
-        String filename = String.format("%s-%s", file.getOriginalFilename(), UUID.randomUUID());
-        fileStoreService.save(path, filename, Optional.of(metaData), new ByteArrayInputStream(file.getData()));
-        user.setUserImageLink(filename);
-        userDao.updateUserProfileById(userProfileId, user);
-
-    }
+//    public void uploadUserProfileImage(UUID userProfileId, MultipartFile file) {
+//
+//        isFileEmpty(file);
+//        isImage(file);
+//        UserProfile user = getUserProfileOrThrow(userProfileId);
+//        Map<String, String> metaData = extractMetaData(file);
+//
+//        String path = String.format("%s/%s", BucketName.PROFILE_IMAGE.getBucketName(), user.getUserProfileId());
+//        String filename = String.format("%s-%s", file.getOriginalFilename(), UUID.randomUUID());
+//        try {
+//            fileStoreService.save(path, filename, Optional.of(metaData), new ByteArrayInputStream(file.getInputStream()));
+//        } catch (IOException e) {
+//            throw new IllegalStateException(e);
+//        }
+//        user.setUserImageLink(filename);
+//        userDao.updateUserProfileById(userProfileId, user);
+//
+//    }
 
     public byte[] downloadUserProfileImage(UUID userProfileId) {
 
@@ -87,25 +106,24 @@ public class UserProfileService {
 
     }
 
-    public byte[] downloadTempImage() {
-        if (this.uploadedFile != null && !profileImageDisplayed) {
-            profileImageDisplayed = true;
-            return uploadedFile.getData();
+    public byte[] downloadUserActionImage(int dbid) {
+
+        Action action = getUserActionOrThrow(dbid);
+
+        if (action.getImage() != null && !action.getImage().isEmpty()) {
+            String path = String.format(
+                    "%s/%s",
+                    BucketName.PROFILE_IMAGE.getBucketName(),
+//                    action.getDbid()); //TODO
+                      action.getUserProfile().getUserProfileId());
+            return fileStoreService.download(path, action.getImage());
         }
-        profileImageDisplayed = false;
-        return fileStoreService.download(BucketName.PROFILE_IMAGE.getBucketName(), "profile.png");
+
+        return null;
+
     }
 
-    public void uploadTempProfileImage(MultipartFile file) {
-        try {
-            this.uploadedFile = new UploadedFile(file.getContentType(), file.getOriginalFilename(), file.getBytes());
-            profileImageDisplayed = false;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Map<String, String> extractMetaData(UploadedFile file) {
+    private Map<String, String> extractMetadata(MultipartFile file) {
         Map<String, String> metaData = new HashMap<>();
         metaData.put("Content-Type", file.getContentType());
         metaData.put("Content-Length", String.valueOf(file.getSize()));
@@ -121,18 +139,26 @@ public class UserProfileService {
                 .orElseThrow(() -> new IllegalStateException(String.format("User profile %s not found.", userProfileId)));
     }
 
-    private void isImage(String contentType) {
-        if (Arrays.asList(
-                ContentType.IMAGE_JPEG,
-                ContentType.IMAGE_PNG).
-                contains(contentType)) {
-            throw new IllegalStateException("File must be an image.");
-        }
+    private Action getUserActionOrThrow(int dbid) {
+        return userDao
+                .selectAllActions()
+                .stream()
+                .filter(action -> action.getDbid()==dbid)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(String.format("Action %s not found by dbid :", dbid)));
     }
 
-    private void isFileEmpty(byte[] fileData) {
-        if (fileData.length <= 0) {
-            throw new IllegalStateException("Cannot upload empty file.");
+    private void isImage(MultipartFile file) {
+        if (!Arrays.asList(
+                ContentType.IMAGE_JPEG.getMimeType(),
+                ContentType.IMAGE_PNG.getMimeType(),
+                ContentType.IMAGE_GIF.getMimeType()).contains(file.getContentType())) {
+            throw new IllegalStateException("File must be an image [" + file.getContentType() + "]");
+        }
+    }
+    private void isFileEmpty(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalStateException("Cannot upload empty file [ " + file.getSize() + "]");
         }
     }
 }

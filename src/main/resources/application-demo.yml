@@ -2,12 +2,9 @@
 #  profiles:
 #    active: @spring.profiles.active@
 
-server:
-  port: 5000
-
 app:
   datasource:
-    jdbc-url: jdbc:postgresql://yafwhodb.cnzl0t4lkvdi.eu-central-1.rds.amazonaws.com:5432/postgres
+    jdbc-url: jdbc:postgresql://localhost:5432/yafwhodb
     username: postgres
     password: notsecret
     pool-size: 30
