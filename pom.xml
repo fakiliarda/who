@@ -67,7 +67,7 @@
         </dependency>
 
         <dependency>
-           comm <groupId>javax.xml.bind</groupId>
+            <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>2.2.4</version>
         </dependency>
