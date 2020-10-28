@@ -15,9 +15,8 @@
 }
 
 .Display {
-    justify-content: left;
-    align-items: stretch;
-    height: 50vh;
+    height: 100%;
+    /* position: absolute; sol üst*/
 }
 
 .Action {

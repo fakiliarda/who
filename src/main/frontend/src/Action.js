@@ -9,7 +9,8 @@ const Action = ({ dbid, username, userProfileId, message}) => {
 
     return (
         <div className="Action">
-            <img src={`http://who-env.eba-cpey3tte.eu-central-1.elasticbeanstalk.com:5000/user/display/${dbid}/image`} className="Img-action" />
+            {/* <img src={`http://who-env.eba-cpey3tte.eu-central-1.elasticbeanstalk.com:5000/user/display/${dbid}/image`} className="Img-action" /> */}
+            <img src={`http://localhost:5000/user/display/${dbid}/image`} className="Img-action" />
             <ul>       
                 <li><h3>{username}</h3></li>
                 <li><p>ID : {userProfileId}</p></li>

@@ -10,7 +10,9 @@ const ListAllMembersPage = () => {
 
     useEffect(() => {
 
-        axios.get(`http://who-env.eba-cpey3tte.eu-central-1.elasticbeanstalk.com:5000/user/list/`).then(res => {
+        // axios.get(`http://who-env.eba-cpey3tte.eu-central-1.elasticbeanstalk.com:5000/user/list/`).then(res => {
+            axios.get(`http://localhost:5000/user/list/`).then(res => {
+
                 setMembers(res.data)     
                 console.log(res.data)
             });

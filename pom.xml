@@ -131,7 +131,7 @@
                             </execution>
 
                             <execution>
-                                <id>npm şnstall all of our dependencies</id>
+                                <id>npm install all of our dependencies</id>
                                 <goals>
                                     <goal>npm</goal>
                                 </goals>

@@ -68,7 +68,8 @@ const AddUserPage = () => {
       const formData = new FormData();
       formData.append("file", userProfileImage.file);
       console.log(userProfileImage.file)
-      axios.post(`http://who-env.eba-cpey3tte.eu-central-1.elasticbeanstalk.com:5000/user/add/${textFieldValue}/`,
+      // axios.post(`http://who-env.eba-cpey3tte.eu-central-1.elasticbeanstalk.com:5000/user/add/${textFieldValue}/`,
+      axios.post(`http://localhost:5000/user/add/${textFieldValue}/`,
         formData,
         {
           headers: {
