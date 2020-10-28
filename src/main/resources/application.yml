@@ -8,6 +8,6 @@ server:
 app:
   datasource:
     jdbc-url: jdbc:postgresql://yafwhodb.cnzl0t4lkvdi.eu-central-1.rds.amazonaws.com:5432/postgres
-    username: postgres
-    password: notsecret
+    username: //?
+    password: //?
     pool-size: 30
